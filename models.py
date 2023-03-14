@@ -2,9 +2,13 @@ from sqlalchemy import String, Integer, Column, Text, Float, DateTime, ForeignKe
 from sqlalchemy.ext.declarative import declarative_base
 from passlib.context import CryptContext
 from datetime import datetime, timezone
+from sqlalchemy.orm import relationship, sessionmaker
 
-from sqlalchemy.orm import relationship
 
+# Создаем объект sessionmaker для создания сессий
+from database import engine
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
