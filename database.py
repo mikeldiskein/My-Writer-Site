@@ -1,7 +1,9 @@
-from sqlalchemy import create_engine
+from models import create_tables
 
-SQLALCHEMY_DATABASE_URL = "postgresql://myuser:mypassword@localhost/mydatabase"
+if __name__ == "__main__":
+    create_tables()
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+
+
+
+
