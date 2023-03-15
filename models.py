@@ -74,8 +74,8 @@ class Comment(Base):
     __tablename__ = 'comments'
 
     id = Column(Integer, primary_key=True, index=True)
-    author = Column(String(250))
-    text = Column(Text(1000))
+    author = Column(String)
+    text = Column(Text)
     book_id = Column(Integer, ForeignKey('books.id'))
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     book = relationship('Book', back_populates='comments')
@@ -87,7 +87,7 @@ class Download(Base):
     id = Column(Integer, primary_key=True, index=True)
     book_id = Column(Integer, ForeignKey('books.id'))
     downloaded_at = Column(DateTime, default=datetime.now(timezone.utc))
-    ip_address = Column(String(45))
+    ip_address = Column(String)
 
 
 class Rating(Base):
@@ -98,7 +98,7 @@ class Rating(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     book_id = Column(Integer, ForeignKey('books.id'))
     put_at = Column(DateTime, default=datetime.now(timezone.utc))
-    comment = Column(Text(1000), nullable=True)
+    comment = Column(Text, nullable=True)
     avg_rating = Column(Float, default=0)
     user = relationship('User', back_populates='ratings')
     book = relationship('Book', back_populates='ratings')
