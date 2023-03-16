@@ -1,20 +1,35 @@
-from fastapi import FastAPI, Request
-from models import Download
+from typing import List
+from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
+from crud import create_book
+from database import Database
+from models import SessionLocal, Author, Book
+from schemas import BookCreate
 
-db = Session()
 app = FastAPI()
+db = Database()
 
 
 @app.get('/')
-async def index():
+def read_root():
     return 'Hello, world!'
 
 
-@app.get('download/{book_id}')
-async def download_book(book_id: int, request: Request):
-    ip_address = request.client.host
-    download = Download(book_id=book_id, ip_address=ip_address)
-    db.add(download)
-    db.commit()
-    return {'message': f'Книга с ID {book_id} скачана пользователем с IP-адресом {ip_address}'}
+new_book = BookCreate(title='Харон', author='Mikel Diskein', published_date=2020)
+with SessionLocal() as session:
+    created_book = create_book(book_data=new_book, db=session)
+
+
+@app.get("/books/", response_model=List[Book])
+def read_books(skip: int = 0, limit: int = 100, db: Session = Depends(db.get_db())):
+    books = db.query(Book).offset(skip).limit(limit).all()
+    return books
+
+
+
+
+
+
+
+
+

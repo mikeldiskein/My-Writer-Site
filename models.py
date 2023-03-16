@@ -1,23 +1,10 @@
-from sqlalchemy import String, Integer, Column, Text, Float, DateTime, ForeignKey, CheckConstraint, event, MetaData, \
-    create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import String, Integer, Column, Text, Float, DateTime, ForeignKey, CheckConstraint, event, MetaData
 from passlib.context import CryptContext
 from datetime import datetime, timezone
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship
+from database import SessionLocal, Base
 
-DATABASE = "postgresql://postgres:dobrysok@localhost/mydatabase"
-
-metadata = MetaData()
-engine = create_engine(
-    DATABASE, connect_args={"check_same_thread": False}
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base(metadata=metadata)
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-
-
-def create_tables():
-    Base.metadata.create_all(bind=engine)
 
 
 class Book(Base):
@@ -25,15 +12,14 @@ class Book(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     author = Column(String, index=True)
-    description = Column(Text)
+    description = Column(Text, nullable=True)
     published_date = Column(String)
-    cover_image = Column(String)
-    book_file = Column(String)
+    cover_image = Column(String, nullable=True)
+    book_file = Column(String, nullable=True)
     views = Column(Integer, default=0)
     downloads = Column(Integer, default=0)
-    comments_on_book = Column(Integer, default=0)
     avg_rating = Column(Float, default=0)
-
+    comments = relationship("Comment", back_populates="book")
     ratings = relationship("Rating", back_populates="book")
 
 
@@ -56,7 +42,6 @@ class User(Base):
     email = Column(String)
     registration_date = Column(DateTime, default=datetime.now(timezone.utc))
     comments_by_user = Column(Integer)
-    average_grade = Column(Float)
 
     @property
     def password(self):
@@ -100,7 +85,6 @@ class Rating(Base):
     put_at = Column(DateTime, default=datetime.now(timezone.utc))
     comment = Column(Text, nullable=True)
     avg_rating = Column(Float, default=0)
-    user = relationship('User', back_populates='ratings')
     book = relationship('Book', back_populates='ratings')
 
     @staticmethod
@@ -120,7 +104,6 @@ class Rating(Base):
 
 event.listen(Rating, 'after_insert', Rating.update_avg_rating)
 event.listen(Rating, 'after_update', Rating.update_avg_rating)
-
 
 
 
