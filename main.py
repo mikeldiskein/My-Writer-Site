@@ -1,9 +1,10 @@
-from typing import List
 from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from crud import create_book
+from starlette.requests import Request
+
 from models import Author, Book
 from database import SessionLocal
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 db = SessionLocal()
@@ -14,19 +15,10 @@ def read_root():
     return 'Hello, world!'
 
 
-new_book = create_book(title='Харон', author=db.query(Author).get(1), year=2020, db=db)
+templates = Jinja2Templates(directory='templates')
 
 
-# @app.get("/books/", response_model=List[Book])
-# def read_books(skip: int = 0, limit: int = 100, db: Session = Depends(db.get_db())):
-#     books = db.query(Book).offset(skip).limit(limit).all()
-#     return books
-
-
-
-
-
-
-
-
-
+@app.get("/books/", response_class=HTMLResponse)
+def books(request: Request):
+    books = db.query(Book).all()
+    return templates.TemplateResponse('books.html', {'request': request, 'books': books})
