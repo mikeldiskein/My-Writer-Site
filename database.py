@@ -9,5 +9,5 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 metadata = MetaData()
 
 
-Base = declarative_base(metadata=metadata)
+
 

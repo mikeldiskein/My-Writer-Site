@@ -2,12 +2,12 @@ from sqlalchemy import String, Integer, Column, Text, Float, DateTime, ForeignKe
     Table
 from passlib.context import CryptContext
 from datetime import datetime, timezone
-from sqlalchemy.orm import relationship
-from database import SessionLocal, Base
+from sqlalchemy.orm import relationship, declarative_base
+from database import SessionLocal, metadata
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
-
+Base = declarative_base(metadata=metadata)
 book_rating_association_table = Table('book_rating_association', Base.metadata,
                                       Column('book_id', Integer, ForeignKey('books.id')),
                                       Column('rating_id', Integer, ForeignKey('ratings.id')))
@@ -89,7 +89,7 @@ class Download(Base):
 
 
 class Rating(Base):
-    __tablename__ = 'rating'
+    __tablename__ = 'ratings'
 
     id = Column(Integer, primary_key=True, index=True)
     value = Column(Integer, CheckConstraint('rating >= 1 AND rating <= 5'), nullable=False)
