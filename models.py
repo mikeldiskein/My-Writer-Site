@@ -1,4 +1,5 @@
-from sqlalchemy import String, Integer, Column, Text, Float, DateTime, ForeignKey, CheckConstraint, event, MetaData
+from sqlalchemy import String, Integer, Column, Text, Float, DateTime, ForeignKey, CheckConstraint, event, MetaData, \
+    Table
 from passlib.context import CryptContext
 from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
@@ -7,20 +8,26 @@ from database import SessionLocal, Base
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 
+book_rating_association_table = Table('book_rating_association', Base.metadata,
+                                      Column('book_id', Integer, ForeignKey('books.id')),
+                                      Column('rating_id', Integer, ForeignKey('ratings.id')))
+
+
 class Book(Base):
     __tablename__ = 'books'
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
-    author = Column(String, index=True)
+    author_id = Column(Integer, ForeignKey('authors.id'))
+    author = relationship('Author', back_populates='books')
     description = Column(Text, nullable=True)
-    published_date = Column(String)
+    published_date = Column(Integer)
     cover_image = Column(String, nullable=True)
     book_file = Column(String, nullable=True)
     views = Column(Integer, default=0)
-    downloads = Column(Integer, default=0)
+    downloads = relationship('Download', back_populates='book')
     avg_rating = Column(Float, default=0)
     comments = relationship("Comment", back_populates="book")
-    ratings = relationship("Rating", back_populates="book")
+    ratings = relationship("Rating", secondary=book_rating_association_table, back_populates='books')
 
 
 class Author(Base):
@@ -29,6 +36,11 @@ class Author(Base):
     id = Column(Integer, index=True, primary_key=True)
     first_name = Column(String, index=True)
     last_name = Column(String, index=True)
+
+    books = relationship('Book', back_populates='author')
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class User(Base):
@@ -42,6 +54,7 @@ class User(Base):
     email = Column(String)
     registration_date = Column(DateTime, default=datetime.now(timezone.utc))
     comments_by_user = Column(Integer)
+    ratings = relationship('Rating', back_populates='user')
 
     @property
     def password(self):
@@ -71,8 +84,8 @@ class Download(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     book_id = Column(Integer, ForeignKey('books.id'))
+    book = relationship('Book', back_populates='downloads')
     downloaded_at = Column(DateTime, default=datetime.now(timezone.utc))
-    ip_address = Column(String)
 
 
 class Rating(Base):
@@ -81,11 +94,11 @@ class Rating(Base):
     id = Column(Integer, primary_key=True, index=True)
     value = Column(Integer, CheckConstraint('rating >= 1 AND rating <= 5'), nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
-    book_id = Column(Integer, ForeignKey('books.id'))
+    user = relationship('User', back_populates='ratings')
     put_at = Column(DateTime, default=datetime.now(timezone.utc))
     comment = Column(Text, nullable=True)
     avg_rating = Column(Float, default=0)
-    book = relationship('Book', back_populates='ratings')
+    books = relationship("Book", secondary=book_rating_association_table, back_populates="ratings")
 
     @staticmethod
     def update_avg_rating(mapper, connection, target):
