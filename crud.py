@@ -3,8 +3,13 @@ from database import SessionLocal
 from models import Book, Author
 
 
-def create_book(title: str, author: Author, year: int, db: Session = SessionLocal()):
-    book = Book(title=title, author=author, published_date=year)
+def create_book(
+        title: str,
+        author: Author,
+        year: int,
+        description: str = 'Пока кукиш',
+        db: Session = SessionLocal()):
+    book = Book(title=title, author=author, published_date=year, description=description)
     db.add(book)
     db.commit()
     db.refresh(book)

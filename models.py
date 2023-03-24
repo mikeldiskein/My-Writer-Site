@@ -19,7 +19,7 @@ class Book(Base):
     title = Column(String, index=True)
     author_id = Column(Integer, ForeignKey('authors.id'))
     author = relationship('Author', back_populates='books')
-    description = Column(Text, nullable=True)
+    description = Column(Text)
     published_date = Column(Integer)
     cover_image = Column(String, nullable=True)
     book_file = Column(String, nullable=True)
@@ -50,22 +50,11 @@ class User(Base):
     username = Column(String, index=True)
     first_name = Column(String)
     last_name = Column(String)
-    password_hash = Column(String)
+    password = Column(String)
     email = Column(String)
     registration_date = Column(DateTime, default=datetime.now(timezone.utc))
     comments_by_user = Column(Integer)
     ratings = relationship('Rating', back_populates='user')
-
-    @property
-    def password(self):
-        raise AttributeError('password is not a readable attribute')
-
-    @password.setter
-    def password(self, password):
-        self.password_hash = pwd_context.hash(password)
-
-    def verify_password(self, password):
-        return pwd_context.verify(password, self.password_hash)
 
 
 class Comment(Base):
