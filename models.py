@@ -53,7 +53,7 @@ class User(Base):
     password = Column(String)
     email = Column(String)
     registration_date = Column(DateTime, default=datetime.now(timezone.utc))
-    comments_by_user = Column(Integer)
+    comments_by_user = relationship('Comment', back_populates='author')
     ratings = relationship('Rating', back_populates='user')
 
 
@@ -61,7 +61,8 @@ class Comment(Base):
     __tablename__ = 'comments'
 
     id = Column(Integer, primary_key=True, index=True)
-    author = Column(String)
+    author_id = Column(Integer, ForeignKey('users.id'))
+    author = relationship('User', back_populates='comments_by_user')
     text = Column(Text)
     book_id = Column(Integer, ForeignKey('books.id'))
     created_at = Column(DateTime, default=datetime.now(timezone.utc))

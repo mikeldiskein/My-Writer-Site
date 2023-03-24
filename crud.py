@@ -1,6 +1,7 @@
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from models import Book, Author
+from models import Book, Author, User
 
 
 def create_book(
@@ -22,3 +23,19 @@ def create_author(first_name: str, last_name: str, db: Session = SessionLocal())
     db.commit()
     db.refresh(author)
     return author
+
+
+pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+
+
+def create_user(user: User, db: Session = SessionLocal):
+    hashed_password = pwd_context.hash(user.password)
+    db_user = User(username=user.username,
+                   password=hashed_password,
+                   first_name=user.first_name,
+                   last_name=user.last_name,
+                   email=user.email)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user

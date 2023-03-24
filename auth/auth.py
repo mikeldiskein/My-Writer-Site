@@ -3,7 +3,7 @@ import jwt
 from datetime import datetime, timedelta
 import os
 
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
