@@ -1,23 +1,35 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from starlette.requests import Request
+from starlette.responses import RedirectResponse
+
 from auth.auth import hash_password, create_access_token, verify_password
 from crud import create_book, create_user
 from models import Author, Book, User
 from database import SessionLocal
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-
 from schemas import UserBase
 
 app = FastAPI()
 db = SessionLocal()
+templates = Jinja2Templates(directory='templates')
 
 # test_user = User(username='ppushkin500',
 #                  first_name='Pavel',
 #                  last_name='Pushkin',
 #                  password='test_password')
 # create_user(user=test_user, db=db)
+
+
+@app.route('/main', methods=['GET', 'POST'])
+def main(request: Request):
+    if request.method == 'GET':
+        return templates.TemplateResponse('main.html',
+                                      {'request': request})
+    elif request.method == 'POST':
+        return templates.TemplateResponse('main.html',
+                                          {'request': request})
 
 
 @app.get('/registration', response_class=HTMLResponse)
@@ -29,33 +41,43 @@ def registration(request: Request):
 @app.post("/register")
 async def register(request: Request):
     form_data = await request.form()
+    hashed_password = hash_password(password=form_data['password'])
     user = UserBase(
         username=form_data["username"],
         first_name=form_data["first_name"],
         last_name=form_data["last_name"],
-        password=form_data["password"],
+        password=hashed_password,
         email=form_data["email"]
     )
     new_user = create_user(user, db=db)
     access_token = create_access_token(data={'sub': new_user.username})
-    return {'access_token': access_token, 'token_type': 'bearer'}
+    response = RedirectResponse(url="/login?method=POST")
+    response.set_cookie(key="access_token", value=access_token)
+    return response
 
 
-@app.post("/login")
-def login(username: str, password: str):
-    user = db.get(User, username=username)
+@app.route("/login", methods=["GET", "POST"])
+def login(request: Request):
+    if request.method == 'GET':
+        return templates.TemplateResponse('login.html',
+                                      {'request': request})
+    elif request.method == 'POST':
+        return templates.TemplateResponse('login.html',
+                                          {'request': request})
+
+
+@app.post("/loginer")
+async def login(request: Request):
+    form_data = await request.form()
+    username = form_data['username']
+    password = form_data['password']
+    user = db.query(User).filter(User.username == username).first()
     if not verify_password(password, user.password):
         raise HTTPException(status_code=400, detail='Неверный пользователь или пароль')
     access_token = create_access_token(data={'sub': user.username})
-    return {'access_token': access_token, 'token_type': 'bearer'}
-
-
-@app.get('/')
-def read_root():
-    return 'Hello, world!'
-
-
-templates = Jinja2Templates(directory='templates')
+    response = RedirectResponse(url="/main", status_code=303)
+    response.set_cookie(key="access_token", value=access_token)
+    return response
 
 
 @app.get("/books/", response_class=HTMLResponse)
