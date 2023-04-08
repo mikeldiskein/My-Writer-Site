@@ -29,9 +29,8 @@ pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 
 def create_user(user: User, db: Session = SessionLocal):
-    hashed_password = pwd_context.hash(user.password)
     db_user = User(username=user.username,
-                   password=hashed_password,
+                   password=user.password,
                    first_name=user.first_name,
                    last_name=user.last_name,
                    email=user.email)

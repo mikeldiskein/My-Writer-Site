@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from starlette.requests import Request
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, Response
 
 from auth.auth import hash_password, create_access_token, verify_password
 from crud import create_book, create_user
@@ -25,8 +25,9 @@ templates = Jinja2Templates(directory='templates')
 @app.route('/main', methods=['GET', 'POST'])
 def main(request: Request):
     if request.method == 'GET':
+        context = {"request": request, "cookie_name": 'user_id'}
         return templates.TemplateResponse('main.html',
-                                      {'request': request})
+                                          context=context)
     elif request.method == 'POST':
         return templates.TemplateResponse('main.html',
                                           {'request': request})
@@ -74,10 +75,16 @@ async def login(request: Request):
     user = db.query(User).filter(User.username == username).first()
     if not verify_password(password, user.password):
         raise HTTPException(status_code=400, detail='Неверный пользователь или пароль')
-    access_token = create_access_token(data={'sub': user.username})
-    response = RedirectResponse(url="/main", status_code=303)
-    response.set_cookie(key="access_token", value=access_token)
+    # access_token = create_access_token(data={'sub': user.username})
+    response = RedirectResponse(url="/main?method=POST", status_code=303)
+    response.set_cookie('user_id', str(user.id))
     return response
+
+
+@app.post("/logout")
+async def logout(request: Request, response: Response):
+    response.delete_cookie('user_id')
+    return RedirectResponse(url="/main")
 
 
 @app.get("/books/", response_class=HTMLResponse)
