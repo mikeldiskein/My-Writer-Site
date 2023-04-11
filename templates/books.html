@@ -18,14 +18,18 @@
         <tbody>
         {% for book in books %}
         <tr>
-            <td>{{ book.title }}</td>
-            <td>{{ book.author.first_name}} {{ book.author.last_name}}</td>
+            <td><a href="{{ url_for('read_book', book_id=book.id) }}" class="button">{{ book.title }}</a></td>>
+            <td>{{ book.author.first_name }} {{ book.author.last_name }}</td>
             <td>{{ book.published_date }}</td>
             <td>{{ book.description }}</td>
         </tr>
         {% endfor %}
         </tbody>
     </table>
+    <br>
+    <br>
+    <br>
+    <a href="/main" class="button">Вернуться на главную</a>
 
 </body>
 </html>

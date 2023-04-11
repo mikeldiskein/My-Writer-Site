@@ -15,9 +15,9 @@ from models import Author
 #     }
 
 
-class UserBase(BaseModel):
-    username: str
-    first_name: str
-    last_name: str
-    password: str
-    email: str
+# class UserBase(BaseModel):
+#     username: str
+#     first_name: str
+#     last_name: str
+#     password: str
+#     email: str
