@@ -1,9 +1,10 @@
 from sqlalchemy import String, Integer, Column, Text, Float, DateTime, ForeignKey, CheckConstraint, event, MetaData, \
-    Table
+    Table, Boolean
 from passlib.context import CryptContext
 from datetime import datetime, timezone
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import relationship, declarative_base, Mapped, mapped_column
 from database import SessionLocal, metadata
+
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
@@ -43,30 +44,29 @@ class Author(Base):
         arbitrary_types_allowed = True
 
 
+class Comment(Base):
+    __tablename__ = 'comments'
+
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(Text)
+    book_id = Column(Integer, ForeignKey('books.id'))
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    book = relationship('Book', back_populates='comments')
+
+
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, index=True)
     first_name = Column(String)
     last_name = Column(String)
-    password = Column(String)
-    email = Column(String)
-    registration_date = Column(DateTime, default=datetime.now(timezone.utc))
-    comments_by_user = relationship('Comment', back_populates='author')
-    ratings = relationship('Rating', back_populates='user')
-
-
-class Comment(Base):
-    __tablename__ = 'comments'
-
-    id = Column(Integer, primary_key=True, index=True)
-    author_id = Column(Integer, ForeignKey('users.id'))
-    author = relationship('User', back_populates='comments_by_user')
-    text = Column(Text)
-    book_id = Column(Integer, ForeignKey('books.id'))
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
-    book = relationship('Book', back_populates='comments')
+    hashed_password = Column(String)
+    email = Column(String, unique=True, index=True)
+    registration_date = Column(DateTime, default=datetime.now())
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 class Download(Base):
@@ -83,8 +83,6 @@ class Rating(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     value = Column(Integer, CheckConstraint('rating >= 1 AND rating <= 5'), nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship('User', back_populates='ratings')
     put_at = Column(DateTime, default=datetime.now(timezone.utc))
     comment = Column(Text, nullable=True)
     avg_rating = Column(Float, default=0)

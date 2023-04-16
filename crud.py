@@ -38,3 +38,12 @@ def create_user(user: User, db: Session = SessionLocal):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+# created_book = create_book(
+#     title='Спутник связи',
+#     author=db.query(Author).get(1),
+#     year=2020,
+#     description='Мой второй и самый лучший рассказ',
+#     db=db
+# )
